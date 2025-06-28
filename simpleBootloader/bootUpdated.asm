@@ -2,10 +2,18 @@
 ORG 0
 BITS 16  
 ; 16-bit mode ( Real Mode ) only 1MB of RAM is accessible
+_start:
+    jmp short start
+    nop
 
-jmp 0x7c00:start
-; Jump to the start of the bootloader code
+times 33 db 0
+; Fill the first 33 bytes with zeros to align the code to 512 bytes
+; This is necessary for the boot sector to be valid and to ensure that the BIOS can load
+; the bootloader correctly.
 start:
+    jmp 0x7c00:step
+    ; Jump to the step of the bootloader code
+step:
     cli ; clears interrupts
     ; Disable interrupts to prevent any interruptions during boot
     ; This is important for bootloaders to ensure they can execute without interference
