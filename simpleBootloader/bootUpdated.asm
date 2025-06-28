@@ -10,9 +10,19 @@ times 33 db 0
 ; Fill the first 33 bytes with zeros to align the code to 512 bytes
 ; This is necessary for the boot sector to be valid and to ensure that the BIOS can load
 ; the bootloader correctly.
+
 start:
-    jmp 0x7c00:step
+    jmp 0x7c0:step
     ; Jump to the step of the bootloader code
+
+handle_zero:
+    mov ah, 0eh
+    mov al, 'A'
+    mov bx, 0x00
+    int 0x10
+    iret
+    ; Interrupt handler for zeroth interrupt
+    ; This is a placeholder for the zeroth interrupt handler 
 step:
     cli ; clears interrupts
     ; Disable interrupts to prevent any interruptions during boot
@@ -26,13 +36,21 @@ step:
     mov es, ax
     ; Set the extra segment register to the same address
     ; This is necessary for accessing the boot sector data
+    mov ax, 0x00
     mov ss, ax
     ; Set the stack segment to the boot sector address
     mov sp, 0x7c00
     ; Set the stack pointer to the top of the boot sector
     ; This is where the stack will be located in memory
 
-    sli ; Set the direction flag to clear the carry flag
+    sti ; Enable interrupts
+    ; Enable interrupts after setting up the bootloader environment
+    ;   create interrupts ourself
+
+    mov word[ss:0x00], handle_zero
+    mov word[ss:0x02], 0x7c0
+    int 0
+    ; Set the direction flag to clear the carry flag
     ; This is a common practice in bootloaders to ensure that string operations work correctly
     mov si, message
     call print
@@ -52,6 +70,7 @@ print:
 print_char:
     mov ah, 0eh
     int 0x10
+    ; Function to print a character to the screen
     ; BIOS interrupt to print character
     ret
 message:
