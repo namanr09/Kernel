@@ -1,5 +1,5 @@
 
-ORG 0x7c00
+ORG 0
 BITS 16  
 ; 16-bit mode ( Real Mode ) only 1MB of RAM is accessible
 
@@ -23,7 +23,7 @@ start:
     mov sp, 0x7c00
     ; Set the stack pointer to the top of the boot sector
     ; This is where the stack will be located in memory
-    
+
     sli ; Set the direction flag to clear the carry flag
     ; This is a common practice in bootloaders to ensure that string operations work correctly
     mov si, message
