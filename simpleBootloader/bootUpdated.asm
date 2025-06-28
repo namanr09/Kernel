@@ -23,6 +23,14 @@ handle_zero:
     iret
     ; Interrupt handler for zeroth interrupt
     ; This is a placeholder for the zeroth interrupt handler 
+handle_one:
+    mov ah, 0eh
+    mov al, 'B'
+    mov bx, 0x00
+    int 0x10
+    iret
+    ; Interrupt handler for first interrupt
+    ; This is a placeholder for the first interrupt handler
 step:
     cli ; clears interrupts
     ; Disable interrupts to prevent any interruptions during boot
@@ -49,14 +57,41 @@ step:
 
     mov word[ss:0x00], handle_zero
     mov word[ss:0x02], 0x7c0
-    int 0
-    ; Set the direction flag to clear the carry flag
-    ; This is a common practice in bootloaders to ensure that string operations work correctly
+    ; int 0
+
+    ; mov ax, 0x00
+    ; div ax
+
+    mov word[ss:0x04], handle_one
+    mov word[ss:0x06], 0x7c0
+    int 1
     mov si, message
+    call print
+
+    ;  disk read
+    mov ah,2
+    mov al,1
+    mov ch, 0
+    mov cl, 2
+    mov dh, 0
+    mov bx, buffer
+    int 0x13
+    ; BIOS interrupt to read a sector from disk
+    ; This reads one sector (1) from cylinder 0, head 0, sector 2 into the buffer
+    ; The buffer is where the data will be stored in memory
+    jc error
+    mov si, buffer 
     call print
     jmp $ 
 ; Infinite loop to keep the bootloader running
 
+
+error:
+    mov si, error_message
+    call print
+    ; If there is an error reading the disk, print the error message
+    ; This is a simple error handling mechanism to indicate that something went wrong
+    jmp $
 print:
     ; move bx, 0
 .loop:
@@ -73,9 +108,14 @@ print_char:
     ; Function to print a character to the screen
     ; BIOS interrupt to print character
     ret
+
+error_message:
+    db 'Error reading disk!', 0x0D, 0x0A
 message:
     db  'updated bootloader loaded successfully!', 0x0D, 0x0A
     db 'Hello World!!!', 0x0D, 0x0A
 
 times 510 - ($ -$$) db 0 ; Fill the rest of the boot sector with zeros
 dw 0xAA55 ; Boot sector signature
+
+buffer:
